@@ -11,8 +11,9 @@ group = "tech.poder"
 version = "1.0.0"
 
 repositories {
-    mavenLocal()
+    //mavenLocal()
     mavenCentral()
+    jcenter()
 }
 
 dependencies {
@@ -20,7 +21,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
-    implementation("com.guardsquare:proguard-core:7.1.0-beta3")
+    implementation("com.guardsquare:proguard-core:7.1.0-beta1")
 }
 
 tasks {
