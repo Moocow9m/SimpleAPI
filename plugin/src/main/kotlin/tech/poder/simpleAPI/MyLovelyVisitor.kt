@@ -24,9 +24,43 @@ internal class MyLovelyVisitor(private val writer: ClassVisitor) : ClassVisitor 
         writer.visitLibraryClass(libraryClass)
     }
 
-    private fun noKotlinMeta(programClass: ProgramClass) {
-        println("Java class ${programClass.name}")
+    private fun javaParse(programClass: ProgramClass): ClassBuilder? {
+        val classBuilder = createClassBuilder(programClass)
 
+        var count = 0
+        programClass.fields.forEach { field ->
+            val access = AccessLevels.resolveField(field.accessFlags)
+            if (AccessLevels.PUBLIC in access) {
+                count++
+                classBuilder.addField(field.u2accessFlags, (programClass.constantPool[field.u2nameIndex] as Utf8Constant).string, (programClass.constantPool[field.u2descriptorIndex] as Utf8Constant).string)
+            }
+        }
+
+        programClass.methods.forEach { method ->
+            val access = AccessLevels.resolveMethod(method.accessFlags)
+            if (AccessLevels.PUBLIC in access) {
+                count++
+                classBuilder.addMethod(method.u2accessFlags, (programClass.constantPool[method.u2nameIndex] as Utf8Constant).string, (programClass.constantPool[method.u2descriptorIndex] as Utf8Constant).string)
+            }
+        }
+
+        if (count == 0) {
+            return null
+        }
+        println("Wrote $count java-items to ${programClass.name}")
+        return classBuilder
+    }
+
+    private fun createClassBuilder(programClass: ProgramClass): ClassBuilder {
+        return ClassBuilder(
+            programClass.u4version,
+            programClass.u2accessFlags,
+            programClass.name,
+            programClass.superName,
+            programClass.featureName,
+            programClass.processingFlags,
+            programClass.processingInfo
+        )
     }
 
     override fun visitProgramClass(programClass: ProgramClass) {
@@ -41,7 +75,10 @@ internal class MyLovelyVisitor(private val writer: ClassVisitor) : ClassVisitor 
             .mapNotNull { runtimeAnnotation ->
                 runtimeAnnotation.annotations.mapNotNull { buildKotlinClassHeader(programClass, it) }.firstOrNull()
             }
-            .firstOrNull() ?: noKotlinMeta(programClass).let { return }
+            .firstOrNull() ?: javaParse(programClass)?.let {
+            writer.visitProgramClass(it.programClass)
+            return
+        } ?: return
 
 
         val metadata = KotlinClassMetadata.read(kotlinClassHeader)
@@ -89,16 +126,19 @@ internal class MyLovelyVisitor(private val writer: ClassVisitor) : ClassVisitor 
             clazz.functions.addAll(allowedFunctions)
             clazz.properties.clear()
             clazz.properties.addAll(allowedProperties)
+            programClass.fields = programClass.fields.filter { field ->
+                clazz.properties.any {
+                    (programClass.constantPool[field.u2nameIndex] as Utf8Constant).string == it.name
+                }
+            }.toTypedArray()
+            programClass.methods = programClass.methods.filter { method ->
+                clazz.functions.any {
+                    (programClass.constantPool[method.u2nameIndex] as Utf8Constant).string == it.name
+                }
+            }.toTypedArray()
 
-            val classBuilder = ClassBuilder(
-                programClass.u4version,
-                programClass.u2accessFlags,
-                programClass.name,
-                programClass.superName,
-                programClass.featureName,
-                programClass.processingFlags,
-                programClass.processingInfo
-            )
+            val classBuilder = javaParse(programClass) //process for java class!
+                ?: createClassBuilder(programClass) //todo would this ever happen?
 
             val header = when (clazz) {
                 is KmClass -> {

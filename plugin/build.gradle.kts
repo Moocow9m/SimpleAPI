@@ -8,10 +8,9 @@ plugins {
 }
 
 group = "tech.poder"
-version = "1.0.0"
+version = "1.0.1"
 
 repositories {
-    //mavenLocal()
     mavenCentral()
     jcenter()
 }
@@ -46,8 +45,8 @@ publishing {
             name = "GitHubPackages"
             url = uri("https://maven.pkg.github.com/Moocow9m/SimpleAPIPlugin")
             credentials {
-                username = project.findProperty("gpr.user")?.toString() ?: System.getenv("USERNAME")
-                password = project.findProperty("gpr.key")?.toString() ?: System.getenv("TOKEN")
+                username = System.getenv("USERNAME")
+                password = System.getenv("TOKEN")
             }
         }
     }
