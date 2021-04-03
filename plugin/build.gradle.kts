@@ -4,7 +4,7 @@ plugins {
     `java-gradle-plugin`
     id("org.jetbrains.kotlin.jvm") version "1.4.32"
     `maven-publish`
-    id("tech.poder.simpleAPI") version "1.0.0"
+    //id("tech.poder.simpleAPI") version "1.0.0"
 }
 
 group = "tech.poder"
@@ -20,7 +20,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
-    implementation("com.guardsquare:proguard-core:7.1.0-beta3")
+    implementation("com.guardsquare:proguard-core:7.0.1")
 }
 
 tasks {
